@@ -15,6 +15,9 @@
 
 #include <cpu/cpu.h>
 
+/**
+ * SDB调试控制台的主循环，同时也是整个模拟器的主循环
+ */
 void sdb_mainloop();
 
 void engine_start() {
