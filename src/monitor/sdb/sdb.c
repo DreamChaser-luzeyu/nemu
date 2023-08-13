@@ -26,7 +26,7 @@ void init_regex();
 
 void init_wp_pool();
 
-/* NOTE: We use the `readline' library to provide more flexibility to read from stdin. */
+/* NOTE: We use the `readline` library to provide more flexibility to read from stdin. */
 static char* rl_gets() {
     static char *line_read = NULL;
 
@@ -34,7 +34,7 @@ static char* rl_gets() {
         free(line_read);
         line_read = NULL;
     }
-    // NOTE: We use the `readline' library to provide more flexibility to read from stdin.
+    // NOTE: We use the `readline` library to provide more flexibility to read from stdin.
     line_read = readline("(nemu) ");
 
     if (line_read && *line_read) {
@@ -60,6 +60,7 @@ static int cmd_n(char* args) {
     return 0;
 }
 static int cmd_info(char* args);
+static int cmd_p(char* args);
 
 static struct {
     const char *name;
@@ -74,15 +75,18 @@ static struct {
         {"echo", "Output your input after the echo command",         cmd_echo},
         {"n", "Execute a single instruction",                        cmd_n},
         {"info", "Show info of registers, ...",                      cmd_info},
-        {"x", "Show memory, usage x <count> <base_addr>",            cmd_x},
+        {"x", "Show memory, usage: x <count> <base_addr>",           cmd_x},
+        {"p", "Calculate expression, usage: p <expr>",               cmd_p},
 };
 
 #define NR_CMD ARRLEN(cmd_table)
 
 // ----- CMD HANDLERS
+// 当匹配到命令后，调用cmd_table中注册的回调函数
 // args                          - 用户输入的整行字符串中，从 cmd结束后的第一个非空格字符 开始的字符串
 // return 0                      - 正常返回
 // return <Integer less than 0>  - 异常返回，程序将终止
+
 
 static int cmd_help(char *args) {
     /* extract the first argument */
@@ -141,6 +145,20 @@ static int cmd_x(char* args) {
         printf("%016lx\t%04x\n", base_addr + i, data);
     }
 
+    return 0;
+}
+
+static int cmd_p(char* args) {
+    bool result;
+    word_t expr_cal_result = expr(args, &result);
+    if(result) {
+        printf("Result in %%lu format: %lu\n", expr_cal_result);
+        printf("Result in %%ld format: %ld\n", expr_cal_result);
+        printf("Result in %%08lx format: %08lx\n", expr_cal_result);
+        printf("Result in %%016lx format: %016lx\n", expr_cal_result);
+    } else {
+        printf("Invalid expression. \n");
+    }
     return 0;
 }
 
