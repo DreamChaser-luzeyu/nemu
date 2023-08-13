@@ -22,9 +22,12 @@
 
 static int is_batch_mode = false;
 
-void init_regex();
+extern void init_regex();
 
-void init_wp_pool();
+extern void init_wp_pool();
+extern void wp_watch(char *expr, word_t res);
+extern int free_wp(int n);
+extern void print_wp();
 
 /* NOTE: We use the `readline` library to provide more flexibility to read from stdin. */
 static char* rl_gets() {
@@ -61,6 +64,8 @@ static int cmd_n(char* args) {
 }
 static int cmd_info(char* args);
 static int cmd_p(char* args);
+static int cmd_w(char* args);
+static int cmd_d(char* args);
 
 static struct {
     const char *name;
@@ -77,6 +82,8 @@ static struct {
         {"info", "Show info of registers, ...",                      cmd_info},
         {"x", "Show memory, usage: x <count> <base_addr>",           cmd_x},
         {"p", "Calculate expression, usage: p <expr>",               cmd_p},
+        { "w", "Usage: w EXPR. Watch for the variation of the result of EXPR, pause at variation point", cmd_w },
+        { "d", "Usage: d N. Delete watchpoint of wp.NO=N", cmd_d },
 };
 
 #define NR_CMD ARRLEN(cmd_table)
@@ -123,6 +130,10 @@ static int cmd_info(char* args) {
     if((strcmp(cmd_arg, "r") == 0) || (strcmp(cmd_arg, "reg") == 0) || (strcmp(cmd_arg, "register") == 0)) {
         isa_reg_display();
     }
+    // 打印观察点
+    if(strcmp(cmd_arg, "w") == 0) {
+        print_wp();
+    }
     return 0;
 }
 
@@ -159,6 +170,32 @@ static int cmd_p(char* args) {
     } else {
         printf("Invalid expression. \n");
     }
+    return 0;
+}
+
+static int cmd_w(char* args) {
+    if (!args) {
+        printf("Usage: w EXPR\n");
+        return 0;
+    }
+    bool success;
+    word_t res = expr(args, &success);
+    if (!success) {
+        puts("invalid expression");
+    } else {
+        wp_watch(args, res);
+    }
+    return 0;
+}
+
+static int cmd_d(char* args) {
+    char *arg = strtok(NULL, "");
+    if (!arg) {
+        printf("Usage: d N\n");
+        return 0;
+    }
+    int no = strtol(arg, NULL, 10);
+    free_wp(no);
     return 0;
 }
 
